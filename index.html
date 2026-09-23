@@ -1,0 +1,1966 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Registro de Horas - Escritório EPCW</title>
+<style>
+  :root {
+    --bg: #f4f5f7;
+    --card-bg: #ffffff;
+    --text: #1a1d23;
+    --text-muted: #6b7280;
+    --border: #e5e7eb;
+    --accent-green: #16a34a;
+    --accent-green-bg: #dcfce7;
+    --accent-red: #dc2626;
+    --accent-red-bg: #fee2e2;
+    --btn-start: #16a34a;
+    --btn-start-hover: #15803d;
+    --btn-stop: #dc2626;
+    --btn-stop-hover: #b91c1c;
+    --shadow: 0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.04);
+    box-sizing: border-box;
+    padding-top: env(safe-area-inset-top, 0px);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #16181d;
+      --card-bg: #1f2229;
+      --text: #f2f3f5;
+      --text-muted: #9aa0ab;
+      --border: #2c303a;
+      --accent-green-bg: #14351f;
+      --accent-red-bg: #3a1616;
+      --shadow: 0 1px 3px rgba(0,0,0,0.4), 0 1px 2px rgba(0,0,0,0.3);
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #16181d;
+    --card-bg: #1f2229;
+    --text: #f2f3f5;
+    --text-muted: #9aa0ab;
+    --border: #2c303a;
+    --accent-green-bg: #14351f;
+    --accent-red-bg: #3a1616;
+    --shadow: 0 1px 3px rgba(0,0,0,0.4), 0 1px 2px rgba(0,0,0,0.3);
+  }
+  html {
+    scroll-padding-top: env(safe-area-inset-top, 0px);
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    min-height: 100%;
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    display: flex;
+    justify-content: center;
+    padding: 24px 16px 48px;
+  }
+  .wrap {
+    width: 100%;
+    max-width: 480px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+  h1 {
+    font-size: 1.25rem;
+    font-weight: 600;
+    margin: 4px 0 0;
+    text-align: center;
+  }
+  .subtitle {
+    text-align: center;
+    color: var(--text-muted);
+    font-size: 0.875rem;
+    margin: 0 0 4px;
+  }
+  .tabs {
+    display: flex;
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 4px;
+    gap: 4px;
+    box-shadow: var(--shadow);
+  }
+  .tab-btn {
+    flex: 1;
+    border: none;
+    background: transparent;
+    color: var(--text-muted);
+    font-size: 0.82rem;
+    font-weight: 600;
+    padding: 10px 4px;
+    border-radius: 9px;
+    cursor: pointer;
+  }
+  .tab-btn.active {
+    background: var(--btn-start);
+    color: white;
+  }
+  .view { display: none; flex-direction: column; gap: 16px; }
+  .view.active { display: flex; }
+  .card {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 20px;
+    box-shadow: var(--shadow);
+  }
+  .status-row {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 10px 16px;
+    border-radius: 999px;
+    font-weight: 600;
+    font-size: 0.95rem;
+    width: fit-content;
+    margin: 0 auto 20px;
+  }
+  .status-row.active {
+    background: var(--accent-green-bg);
+    color: var(--accent-green);
+  }
+  .status-row.inactive {
+    background: var(--accent-red-bg);
+    color: var(--accent-red);
+  }
+  .dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: currentColor;
+    flex-shrink: 0;
+  }
+  .dot.pulse {
+    animation: pulse 1.6s ease-in-out infinite;
+  }
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.35; }
+  }
+  .timer {
+    text-align: center;
+    font-variant-numeric: tabular-nums;
+    font-size: 2.5rem;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    margin-bottom: 4px;
+  }
+  .timer-label {
+    text-align: center;
+    color: var(--text-muted);
+    font-size: 0.8rem;
+    margin-bottom: 20px;
+  }
+  .main-btn {
+    display: block;
+    width: 100%;
+    border: none;
+    border-radius: 14px;
+    padding: 18px;
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: white;
+    cursor: pointer;
+    transition: background 0.15s ease, transform 0.05s ease;
+  }
+  .main-btn:active {
+    transform: scale(0.98);
+  }
+  .main-btn.start {
+    background: var(--btn-start);
+  }
+  .main-btn.start:hover {
+    background: var(--btn-start-hover);
+  }
+  .main-btn.stop {
+    background: var(--btn-stop);
+  }
+  .main-btn.stop:hover {
+    background: var(--btn-stop-hover);
+  }
+  .main-btn:disabled {
+    opacity: 0.6;
+    cursor: default;
+  }
+  .project-field {
+    margin-bottom: 16px;
+  }
+  .project-field label {
+    display: block;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    margin-bottom: 6px;
+  }
+  .project-field input,
+  .project-field select {
+    width: 100%;
+    padding: 12px 14px;
+    border-radius: 10px;
+    border: 1px solid var(--border);
+    background: var(--bg);
+    color: var(--text);
+    font-size: 0.95rem;
+    font-family: inherit;
+  }
+  .project-field input:disabled {
+    opacity: 0.75;
+    font-weight: 600;
+  }
+  .project-field input:focus,
+  .project-field select:focus {
+    outline: 2px solid var(--btn-start);
+    outline-offset: -1px;
+  }
+  .log-item .project {
+    font-weight: 600;
+    font-size: 0.85rem;
+    margin-bottom: 2px;
+  }
+  .section-title {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    margin: 4px 2px 0;
+  }
+  .totals {
+    display: flex;
+    gap: 12px;
+  }
+  .totals .card {
+    flex: 1;
+    text-align: center;
+    padding: 14px 10px;
+  }
+  .totals .value {
+    font-size: 1.4rem;
+    font-weight: 700;
+  }
+  .totals .label {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    margin-top: 2px;
+  }
+  .log-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .log-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 14px;
+    border-radius: 12px;
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+  }
+  .log-item .range {
+    font-size: 0.9rem;
+  }
+  .log-item .date {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    margin-top: 2px;
+  }
+  .log-item .dur {
+    font-weight: 700;
+    font-size: 0.9rem;
+    white-space: nowrap;
+  }
+  .edit-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 1rem;
+    padding: 4px;
+    line-height: 1;
+    opacity: 0.7;
+  }
+  .edit-btn:hover {
+    opacity: 1;
+  }
+  .edited-tag {
+    font-size: 0.65rem;
+    color: var(--text-muted);
+    font-weight: 700;
+    margin-left: 6px;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    vertical-align: middle;
+  }
+  .log-item-editing {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+  }
+  .edit-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .edit-row input[type="time"] {
+    flex: 1;
+    padding: 8px 10px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    background: var(--bg);
+    color: var(--text);
+    font-size: 0.9rem;
+    font-family: inherit;
+  }
+  .edit-actions {
+    display: flex;
+    gap: 8px;
+  }
+  .edit-save-btn, .edit-cancel-btn {
+    flex: 1;
+    padding: 9px;
+    border-radius: 8px;
+    border: none;
+    font-weight: 700;
+    font-size: 0.85rem;
+    cursor: pointer;
+  }
+  .edit-save-btn {
+    background: var(--btn-start);
+    color: white;
+  }
+  .edit-cancel-btn {
+    background: var(--bg);
+    color: var(--text);
+    border: 1px solid var(--border);
+  }
+  .edit-error {
+    color: var(--accent-red);
+    font-size: 0.78rem;
+  }
+  .empty {
+    text-align: center;
+    color: var(--text-muted);
+    font-size: 0.875rem;
+    padding: 24px 0;
+  }
+  .footnote {
+    text-align: center;
+    color: var(--text-muted);
+    font-size: 0.75rem;
+    margin-top: 4px;
+  }
+  /* Calendar (Banco de Horas) */
+  .cal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 14px;
+  }
+  .cal-header .cal-title {
+    font-weight: 700;
+    font-size: 1.05rem;
+    text-transform: capitalize;
+  }
+  .cal-nav-btn {
+    border: 1px solid var(--border);
+    background: var(--bg);
+    color: var(--text);
+    width: 34px;
+    height: 34px;
+    border-radius: 9px;
+    font-size: 1rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .cal-weekdays, .cal-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 4px;
+  }
+  .cal-weekdays {
+    margin-bottom: 6px;
+  }
+  .cal-weekdays span {
+    text-align: center;
+    font-size: 0.7rem;
+    font-weight: 700;
+    color: var(--text-muted);
+    text-transform: uppercase;
+  }
+  .cal-day {
+    aspect-ratio: 1 / 1;
+    border-radius: 9px;
+    border: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 2px;
+    padding: 2px;
+    cursor: default;
+  }
+  .cal-day.empty-cell {
+    border: none;
+    background: transparent;
+  }
+  .cal-day.today {
+    border: 2px solid var(--btn-start);
+  }
+  .cal-day .num {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--text-muted);
+  }
+  .cal-day.has-hours .num {
+    color: var(--text);
+  }
+  .cal-day .hrs {
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: var(--accent-green);
+  }
+  .cal-day.clickable {
+    cursor: pointer;
+  }
+  .cal-month-total {
+    text-align: center;
+    margin-top: 14px;
+    font-size: 0.85rem;
+    color: var(--text-muted);
+  }
+  .cal-month-total b {
+    color: var(--text);
+  }
+  .day-detail-title {
+    font-weight: 700;
+    font-size: 0.95rem;
+    margin-bottom: 10px;
+  }
+  .banco-selector {
+    margin-bottom: 4px;
+  }
+  .banco-selector label {
+    display: block;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    margin-bottom: 6px;
+  }
+  .banco-selector select {
+    width: 100%;
+    padding: 12px 14px;
+    border-radius: 10px;
+    border: 1px solid var(--border);
+    background: var(--card-bg);
+    color: var(--text);
+    font-size: 0.95rem;
+    font-family: inherit;
+  }
+  /* Disponibilidade */
+  .user-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .user-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 14px;
+    border-radius: 12px;
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+  }
+  .user-item .dot {
+    width: 12px;
+    height: 12px;
+  }
+  .user-item .info {
+    flex: 1;
+    min-width: 0;
+  }
+  .user-item .name-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-weight: 700;
+    font-size: 0.95rem;
+  }
+  .user-item .role-badge {
+    font-size: 0.68rem;
+    font-weight: 700;
+    color: var(--text-muted);
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    padding: 1px 8px;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+  }
+  .user-item .you-tag {
+    font-size: 0.72rem;
+    color: var(--btn-start);
+    font-weight: 700;
+  }
+  .user-item .detail {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    margin-top: 2px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .user-item.active .detail {
+    color: var(--accent-green);
+  }
+  /* Login / Cadastro */
+  #loginScreen, #cadastroScreen {
+    width: 100%;
+    max-width: 360px;
+    margin: 0 auto;
+    display: none;
+    flex-direction: column;
+    gap: 16px;
+    padding-top: 40px;
+  }
+  #loginScreen h1, #cadastroScreen h1 {
+    margin-bottom: 0;
+  }
+  .login-field {
+    margin-bottom: 14px;
+  }
+  .login-field:last-of-type {
+    margin-bottom: 0;
+  }
+  .login-field label {
+    display: block;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    margin-bottom: 6px;
+  }
+  .login-field input,
+  .login-field select {
+    width: 100%;
+    padding: 12px 14px;
+    border-radius: 10px;
+    border: 1px solid var(--border);
+    background: var(--bg);
+    color: var(--text);
+    font-size: 0.95rem;
+    font-family: inherit;
+  }
+  .login-field input:focus,
+  .login-field select:focus {
+    outline: 2px solid var(--btn-start);
+    outline-offset: -1px;
+  }
+  .login-error {
+    color: var(--accent-red);
+    font-size: 0.82rem;
+    text-align: center;
+    min-height: 1.2em;
+  }
+  .login-hint {
+    text-align: center;
+    color: var(--text-muted);
+    font-size: 0.8rem;
+  }
+  .login-hint a {
+    color: var(--btn-start);
+    font-weight: 600;
+    text-decoration: none;
+    cursor: pointer;
+  }
+  .account-row {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    margin: -8px 0 0;
+  }
+  .account-row button {
+    border: none;
+    background: transparent;
+    color: var(--btn-stop);
+    font-size: 0.8rem;
+    font-weight: 600;
+    cursor: pointer;
+    padding: 0;
+  }
+  .field-row {
+    display: flex;
+    gap: 10px;
+  }
+  .field-row .login-field {
+    flex: 1;
+  }
+</style>
+</head>
+<body>
+
+  <div id="loginScreen">
+    <h1>⏱️ Registro de Horas - Escritório EPCW</h1>
+    <p class="subtitle">Faça login para continuar</p>
+    <div class="card">
+      <form id="loginForm" novalidate>
+        <div class="login-field">
+          <label for="loginUserSelect">Nome</label>
+          <select id="loginUserSelect" required>
+            <option value="">Selecione seu nome</option>
+          </select>
+        </div>
+        <div class="login-field">
+          <label for="loginPass">Senha</label>
+          <input id="loginPass" type="password" autocomplete="current-password" required>
+        </div>
+        <button type="submit" id="loginBtn" class="main-btn start">Entrar</button>
+      </form>
+      <div id="loginError" class="login-error">&nbsp;</div>
+    </div>
+    <p class="login-hint">Primeiro acesso? <a id="goToCadastro">Cadastre-se</a></p>
+  </div>
+
+  <div id="cadastroScreen">
+    <h1>📝 Cadastro</h1>
+    <p class="subtitle">Preencha seus dados para começar</p>
+    <div class="card">
+      <form id="cadastroForm" novalidate>
+        <div class="field-row">
+          <div class="login-field">
+            <label for="cadFirstName">Nome</label>
+            <input id="cadFirstName" type="text" autocomplete="given-name" required>
+          </div>
+          <div class="login-field">
+            <label for="cadLastName">Sobrenome</label>
+            <input id="cadLastName" type="text" autocomplete="family-name" required>
+          </div>
+        </div>
+        <div class="login-field">
+          <label for="cadPhone">Telefone</label>
+          <input id="cadPhone" type="tel" autocomplete="tel" placeholder="(45) 99999-9999" required>
+        </div>
+        <div class="login-field">
+          <label for="cadRole">Cargo</label>
+          <select id="cadRole" required>
+            <option value="Supervisor">Supervisor</option>
+            <option value="Colaborador">Colaborador</option>
+          </select>
+        </div>
+        <div class="login-field">
+          <label for="cadPass">Senha</label>
+          <input id="cadPass" type="password" autocomplete="new-password" required>
+        </div>
+        <div class="login-field">
+          <label for="cadPassConfirm">Confirmar senha</label>
+          <input id="cadPassConfirm" type="password" autocomplete="new-password" required>
+        </div>
+        <button type="submit" id="cadastroBtn" class="main-btn start">Cadastrar</button>
+      </form>
+      <div id="cadastroError" class="login-error">&nbsp;</div>
+    </div>
+    <p class="login-hint">Já tem cadastro? <a id="goToLogin">Fazer login</a></p>
+  </div>
+
+  <div id="appScreen" class="wrap" style="display:none;">
+    <h1>⏱️ Registro de Horas - Escritório EPCW</h1>
+    <p class="subtitle">Toque para iniciar quando começar e parar quando encerrar</p>
+    <div class="account-row">
+      <span id="greetName"></span>
+      <span>·</span>
+      <button id="logoutBtn">Sair</button>
+    </div>
+
+    <div class="tabs">
+      <button id="tabDispoBtn" class="tab-btn active">Disponibilidade</button>
+      <button id="tabBancoBtn" class="tab-btn">Banco de Horas</button>
+      <button id="tabPontoBtn" class="tab-btn">Registro Ponto</button>
+    </div>
+
+    <div id="viewDispo" class="view active">
+      <div class="card">
+        <div class="section-title" style="margin-top:0;">Salas de reunião</div>
+        <div id="roomsContainer"></div>
+      </div>
+      <div id="supervisorToggleCard" class="card" style="display:none;">
+        <div class="section-title" style="margin-top:0;">Minha disponibilidade</div>
+        <button id="supervisorToggleBtn" class="main-btn start" disabled>Carregando…</button>
+      </div>
+      <div class="section-title">Quem está disponível agora</div>
+      <div id="userList" class="user-list">
+        <div class="empty">Carregando…</div>
+      </div>
+    </div>
+
+    <div id="viewBanco" class="view">
+      <div id="bancoSelectorField" class="card banco-selector" style="display:none;">
+        <label for="bancoUserSelect">Ver banco de horas de</label>
+        <select id="bancoUserSelect">
+          <option value="">Selecione um colaborador</option>
+        </select>
+      </div>
+      <div id="bancoEmptyMsg" class="empty" style="display:none;">Selecione um colaborador para ver o banco de horas</div>
+      <div id="bancoCalendarCard" class="card">
+        <div class="cal-header">
+          <button id="calPrevBtn" class="cal-nav-btn">‹</button>
+          <div id="calTitle" class="cal-title">—</div>
+          <button id="calNextBtn" class="cal-nav-btn">›</button>
+        </div>
+        <div class="cal-weekdays">
+          <span>D</span><span>S</span><span>T</span><span>Q</span><span>Q</span><span>S</span><span>S</span>
+        </div>
+        <div id="calGrid" class="cal-grid"></div>
+        <div class="cal-month-total">Total do mês: <b id="calMonthTotal">0h00</b></div>
+      </div>
+      <div id="dayDetailCard" class="card" style="display:none;">
+        <div id="dayDetailTitle" class="day-detail-title"></div>
+        <div id="dayDetailList" class="log-list"></div>
+      </div>
+
+      <div class="card">
+        <div class="section-title" style="margin-top:0;">Somar horas por período</div>
+        <div class="field-row" style="margin-top:10px;">
+          <div class="login-field">
+            <label for="rangeStart">De</label>
+            <input type="date" id="rangeStart">
+          </div>
+          <div class="login-field">
+            <label for="rangeEnd">Até</label>
+            <input type="date" id="rangeEnd">
+          </div>
+        </div>
+        <div class="cal-month-total">Total no período: <b id="rangeTotal">0h00</b></div>
+      </div>
+    </div>
+
+    <div id="viewPonto" class="view">
+      <div class="card">
+        <div class="project-field">
+          <label for="projectInput">Projeto</label>
+          <input id="projectInput" type="text" placeholder="Ex: EMEF Carlos Gomes" list="projectSuggestions" autocomplete="off">
+          <datalist id="projectSuggestions"></datalist>
+        </div>
+        <div id="statusRow" class="status-row inactive">
+          <span class="dot"></span>
+          <span id="statusText">Carregando…</span>
+        </div>
+        <div id="timer" class="timer">00:00:00</div>
+        <div id="timerLabel" class="timer-label">&nbsp;</div>
+        <button id="mainBtn" class="main-btn start" disabled>Carregando…</button>
+      </div>
+
+      <div class="totals">
+        <div class="card">
+          <div id="todayTotal" class="value">0h00</div>
+          <div class="label">Hoje</div>
+        </div>
+        <div class="card">
+          <div id="weekTotal" class="value">0h00</div>
+          <div class="label">Últimos 7 dias</div>
+        </div>
+      </div>
+
+      <div class="section-title">Meus registros recentes</div>
+      <div id="logList" class="log-list">
+        <div class="empty">Nenhum registro ainda</div>
+      </div>
+      <div class="footnote">Os dados ficam salvos neste artefato e sincronizam entre seus dispositivos</div>
+    </div>
+  </div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-app.js";
+import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-auth.js";
+import {
+  getFirestore, doc, getDoc, setDoc, updateDoc, deleteDoc,
+  collection, addDoc, getDocs,
+  onSnapshot as fsOnSnapshot, query as fsQuery, where as fsWhere, limit as fsLimit
+} from "https://www.gstatic.com/firebasejs/12.8.0/firebase-firestore.js";
+
+// Configuração do projeto Firebase (Escritório EPCW)
+var firebaseConfig = {
+  apiKey: "AIzaSyDwX4nmo0CZbIGTAEF8jj2wO1Rg2XUla2g",
+  authDomain: "registro-ponto---epcw.firebaseapp.com",
+  projectId: "registro-ponto---epcw",
+  storageBucket: "registro-ponto---epcw.firebasestorage.app",
+  messagingSenderId: "454991986189",
+  appId: "1:454991986189:web:d584a9b3dab6f6f2f3df44"
+};
+
+var firebaseApp = initializeApp(firebaseConfig);
+var firebaseAuth = getAuth(firebaseApp);
+var firestoreDb = getFirestore(firebaseApp);
+
+// ---------- Camada de compatibilidade: expõe o Firestore com a mesma
+// API encadeada (doc/collection/where/limit/onSnapshot...) usada pelo
+// resto do app, para que a lógica abaixo não precise mudar. ----------
+function wrapDocRef(ref) {
+  return {
+    id: ref.id,
+    get: function () {
+      return getDoc(ref).then(function (snap) {
+        return { exists: snap.exists(), data: function () { return snap.data(); }, id: snap.id };
+      });
+    },
+    set: function (data) { return setDoc(ref, data); },
+    update: function (data) { return updateDoc(ref, data); },
+    delete: function () { return deleteDoc(ref); },
+    onSnapshot: function (next, errorCb) {
+      return fsOnSnapshot(ref, function (snap) {
+        next({ exists: snap.exists(), data: function () { return snap.data(); }, id: snap.id });
+      }, errorCb);
+    },
+    collection: function (sub) { return wrapCollectionRef(collection(ref, sub)); }
+  };
+}
+
+function wrapCollectionRef(ref, constraints) {
+  constraints = constraints || [];
+  function buildQuery() {
+    return constraints.length ? fsQuery.apply(null, [ref].concat(constraints)) : ref;
+  }
+  return {
+    doc: function (id) { return wrapDocRef(id ? doc(ref, id) : doc(ref)); },
+    add: function (data) {
+      return addDoc(ref, data).then(function (docRef) { return { id: docRef.id }; });
+    },
+    where: function (field, op, value) {
+      return wrapCollectionRef(ref, constraints.concat([fsWhere(field, op, value)]));
+    },
+    // orderBy é ignorado de propósito: todo lugar que precisa de ordem já
+    // reordena no próprio JavaScript, e assim evitamos exigir índices
+    // compostos no Firestore para as consultas com "where" + "orderBy".
+    orderBy: function () { return this; },
+    limit: function (n) { return wrapCollectionRef(ref, constraints.concat([fsLimit(n)])); },
+    get: function () {
+      return getDocs(buildQuery()).then(function (snap) {
+        return { docs: snap.docs.map(function (d) { return { id: d.id, data: function () { return d.data(); } }; }) };
+      });
+    },
+    onSnapshot: function (next, errorCb) {
+      return fsOnSnapshot(buildQuery(), function (snap) {
+        next({ docs: snap.docs.map(function (d) { return { id: d.id, data: function () { return d.data(); } }; }) });
+      }, errorCb);
+    }
+  };
+}
+
+var dbShim = {
+  doc: function (path) { return wrapDocRef(doc(firestoreDb, path)); },
+  collection: function (path) { return wrapCollectionRef(collection(firestoreDb, path)); }
+};
+
+var authReadyPromise = signInAnonymously(firebaseAuth).then(function () {
+  return true;
+}).catch(function (err) {
+  console.error("Erro de autenticação Firebase:", err);
+  return false;
+});
+
+async function getDb() {
+  var ok = await authReadyPromise;
+  return ok ? dbShim : null;
+}
+
+(function () {
+  var SESSIONS_COLLECTION = "time_sessions";
+  var USERS_COLLECTION = "users";
+  var TIME_STATE_COLLECTION = "time_state";
+  var MEET_ROOM_COLLECTION = "meet_room_state";
+  var ROOMS = [
+    { id: "sala1", label: "Sala 1", url: "https://meet.google.com/cfw-fqnb-spz" },
+    { id: "sala2", label: "Sala 2", url: "https://meet.google.com/pmm-fnou-sdn" }
+  ];
+  var WEEKDAY_NAMES_LONG = ["Domingo","Segunda-feira","Terça-feira","Quarta-feira","Quinta-feira","Sexta-feira","Sábado"];
+  var MONTH_NAMES = ["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
+  var LOGIN_KEY = "regponto_logged_in_user";
+
+  // Ponto elements
+  var statusRow = document.getElementById("statusRow");
+  var statusText = document.getElementById("statusText");
+  var timerEl = document.getElementById("timer");
+  var timerLabel = document.getElementById("timerLabel");
+  var mainBtn = document.getElementById("mainBtn");
+  var projectInput = document.getElementById("projectInput");
+  var projectSuggestions = document.getElementById("projectSuggestions");
+  var todayTotalEl = document.getElementById("todayTotal");
+  var weekTotalEl = document.getElementById("weekTotal");
+  var logListEl = document.getElementById("logList");
+
+  // Tabs / views
+  var tabPontoBtn = document.getElementById("tabPontoBtn");
+  var tabBancoBtn = document.getElementById("tabBancoBtn");
+  var tabDispoBtn = document.getElementById("tabDispoBtn");
+  var viewPonto = document.getElementById("viewPonto");
+  var viewBanco = document.getElementById("viewBanco");
+  var viewDispo = document.getElementById("viewDispo");
+  var userListEl = document.getElementById("userList");
+  var supervisorToggleCard = document.getElementById("supervisorToggleCard");
+  var supervisorToggleBtn = document.getElementById("supervisorToggleBtn");
+  var roomsContainer = document.getElementById("roomsContainer");
+
+  // Calendar elements
+  var calPrevBtn = document.getElementById("calPrevBtn");
+  var calNextBtn = document.getElementById("calNextBtn");
+  var calTitle = document.getElementById("calTitle");
+  var calGrid = document.getElementById("calGrid");
+  var calMonthTotal = document.getElementById("calMonthTotal");
+  var bancoCalendarCard = document.getElementById("bancoCalendarCard");
+  var bancoEmptyMsg = document.getElementById("bancoEmptyMsg");
+  var bancoSelectorField = document.getElementById("bancoSelectorField");
+  var bancoUserSelect = document.getElementById("bancoUserSelect");
+  var dayDetailCard = document.getElementById("dayDetailCard");
+  var dayDetailTitle = document.getElementById("dayDetailTitle");
+  var dayDetailList = document.getElementById("dayDetailList");
+  var rangeStart = document.getElementById("rangeStart");
+  var rangeEnd = document.getElementById("rangeEnd");
+  var rangeTotalEl = document.getElementById("rangeTotal");
+
+  // Login / Cadastro / App screen elements
+  var loginScreen = document.getElementById("loginScreen");
+  var cadastroScreen = document.getElementById("cadastroScreen");
+  var appScreen = document.getElementById("appScreen");
+
+  var loginForm = document.getElementById("loginForm");
+  var loginUserSelect = document.getElementById("loginUserSelect");
+  var loginPass = document.getElementById("loginPass");
+  var loginBtn = document.getElementById("loginBtn");
+  var loginError = document.getElementById("loginError");
+  var goToCadastro = document.getElementById("goToCadastro");
+
+  var cadastroForm = document.getElementById("cadastroForm");
+  var cadFirstName = document.getElementById("cadFirstName");
+  var cadLastName = document.getElementById("cadLastName");
+  var cadPhone = document.getElementById("cadPhone");
+  var cadRole = document.getElementById("cadRole");
+  var cadPass = document.getElementById("cadPass");
+  var cadPassConfirm = document.getElementById("cadPassConfirm");
+  var cadastroBtn = document.getElementById("cadastroBtn");
+  var cadastroError = document.getElementById("cadastroError");
+  var goToLogin = document.getElementById("goToLogin");
+
+  var greetName = document.getElementById("greetName");
+  var logoutBtn = document.getElementById("logoutBtn");
+
+  var db = null;
+  var currentUser = null;
+  var isSupervisor = false;
+  var currentState = { active: false, startedAt: null, project: "" };
+  var mySessions = [];
+  var bancoSessions = [];
+  var bancoUserId = null;
+  var bancoUnsubscribe = null;
+  var allUsers = [];
+  var allStates = {};
+  var allRoomStates = {};
+  var tickInterval = null;
+  var dbReady = false;
+  var appInitialized = false;
+
+  var now0 = new Date();
+  var calYear = now0.getFullYear();
+  var calMonth = now0.getMonth();
+  var selectedDayKey = null;
+  var editingLogId = null;
+  var editingDayId = null;
+
+  function combineDateAndTime(baseTs, timeStr) {
+    var base = new Date(baseTs);
+    var parts = timeStr.split(":");
+    var h = parseInt(parts[0], 10);
+    var m = parseInt(parts[1], 10);
+    return new Date(base.getFullYear(), base.getMonth(), base.getDate(), h, m, 0, 0).getTime();
+  }
+
+  function buildSessionItemHtml(s, opts) {
+    opts = opts || {};
+    var isEditing = opts.editingId === s.id;
+    var canEdit = !!s.id && !s.live;
+    var projectLine = s.project ? '<div class="project">' + escapeHtml(s.project) + '</div>' : "";
+
+    if (isEditing) {
+      return '<div class="log-item log-item-editing" data-session-id="' + s.id + '">' +
+        projectLine +
+        '<div class="edit-row">' +
+          '<input type="time" class="edit-time-start" value="' + formatClock(s.start) + '">' +
+          '<span>–</span>' +
+          '<input type="time" class="edit-time-end" value="' + formatClock(s.end) + '">' +
+        '</div>' +
+        '<div class="edit-error" data-role="edit-error">&nbsp;</div>' +
+        '<div class="edit-actions">' +
+          '<button type="button" class="edit-save-btn" data-session-id="' + s.id + '">Salvar</button>' +
+          '<button type="button" class="edit-cancel-btn">Cancelar</button>' +
+        '</div>' +
+      '</div>';
+    }
+
+    var editedTag = s.edited ? '<span class="edited-tag">editado</span>' : "";
+    var dateLine = opts.showDate ? '<div class="date">' + formatDateLabel(s.start) + '</div>' : "";
+    var endLabel = s.live ? "agora" : formatClock(s.end);
+    var editBtn = canEdit ? '<button type="button" class="edit-btn" data-session-id="' + s.id + '" title="Editar">✏️</button>' : "";
+
+    return '<div class="log-item" data-session-id="' + (s.id || "") + '">' +
+      '<div>' +
+        projectLine +
+        '<div class="range">' + formatClock(s.start) + ' – ' + endLabel + ' ' + editedTag + '</div>' +
+        dateLine +
+      '</div>' +
+      '<div style="display:flex; align-items:center; gap:8px;">' +
+        '<div class="dur">' + formatHoursShort(s.durationMs) + '</div>' +
+        editBtn +
+      '</div>' +
+    '</div>';
+  }
+
+  function wireSessionEditButtons(containerEl, sessionsArray, editingIdSetter, rerenderFn) {
+    containerEl.querySelectorAll(".edit-btn").forEach(function (btn) {
+      btn.addEventListener("click", function () {
+        editingIdSetter(btn.getAttribute("data-session-id"));
+        rerenderFn();
+      });
+    });
+    containerEl.querySelectorAll(".edit-cancel-btn").forEach(function (btn) {
+      btn.addEventListener("click", function () {
+        editingIdSetter(null);
+        rerenderFn();
+      });
+    });
+    containerEl.querySelectorAll(".edit-save-btn").forEach(function (btn) {
+      btn.addEventListener("click", async function () {
+        var sessionId = btn.getAttribute("data-session-id");
+        var item = btn.closest(".log-item-editing");
+        var startVal = item.querySelector(".edit-time-start").value;
+        var endVal = item.querySelector(".edit-time-end").value;
+        var errorEl = item.querySelector('[data-role="edit-error"]');
+        if (!startVal || !endVal) {
+          errorEl.textContent = "Preencha os dois horários.";
+          return;
+        }
+        var original = sessionsArray.find(function (s) { return s.id === sessionId; });
+        if (!original) return;
+        var newStart = combineDateAndTime(original.start, startVal);
+        var newEnd = combineDateAndTime(original.start, endVal);
+        if (newEnd <= newStart) {
+          errorEl.textContent = "O horário final precisa ser depois do inicial.";
+          return;
+        }
+        btn.disabled = true;
+        btn.textContent = "Salvando…";
+        try {
+          await db.collection(SESSIONS_COLLECTION).doc(sessionId).update({
+            start: newStart,
+            end: newEnd,
+            durationMs: newEnd - newStart,
+            edited: true,
+            editedAt: Date.now()
+          });
+          editingIdSetter(null);
+          rerenderFn();
+        } catch (err) {
+          console.error("Erro ao editar registro:", err);
+          errorEl.textContent = "Erro ao salvar. Tente novamente.";
+          btn.disabled = false;
+          btn.textContent = "Salvar";
+        }
+      });
+    });
+  }
+
+  function pad(n) { return String(n).padStart(2, "0"); }
+
+  function formatDuration(ms) {
+    var totalSeconds = Math.max(0, Math.floor(ms / 1000));
+    var h = Math.floor(totalSeconds / 3600);
+    var m = Math.floor((totalSeconds % 3600) / 60);
+    var s = totalSeconds % 60;
+    return pad(h) + ":" + pad(m) + ":" + pad(s);
+  }
+
+  function formatHoursShort(ms) {
+    var totalMinutes = Math.ceil(ms / 60000);
+    var h = Math.floor(totalMinutes / 60);
+    var m = totalMinutes % 60;
+    return h + "h" + pad(m);
+  }
+
+  function formatClock(ts) {
+    var d = new Date(ts);
+    return pad(d.getHours()) + ":" + pad(d.getMinutes());
+  }
+
+  function formatDateLabel(ts) {
+    var d = new Date(ts);
+    var today = new Date();
+    var isToday = d.toDateString() === today.toDateString();
+    if (isToday) return "Hoje";
+    var yest = new Date(today);
+    yest.setDate(yest.getDate() - 1);
+    if (d.toDateString() === yest.toDateString()) return "Ontem";
+    return d.toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit" });
+  }
+
+  function localDateKey(ts) {
+    var d = new Date(ts);
+    return d.getFullYear() + "-" + pad(d.getMonth() + 1) + "-" + pad(d.getDate());
+  }
+
+  function escapeHtml(str) {
+    var div = document.createElement("div");
+    div.textContent = str;
+    return div.innerHTML;
+  }
+
+  async function sha256Hex(str) {
+    var enc = new TextEncoder().encode(str);
+    var hashBuf = await crypto.subtle.digest("SHA-256", enc);
+    return Array.from(new Uint8Array(hashBuf)).map(function (b) {
+      return b.toString(16).padStart(2, "0");
+    }).join("");
+  }
+
+  // ---------- Screen switching ----------
+  function hideAllScreens() {
+    loginScreen.style.display = "none";
+    cadastroScreen.style.display = "none";
+    appScreen.style.display = "none";
+  }
+
+  function showApp(user) {
+    currentUser = user;
+    isSupervisor = user.role === "Supervisor";
+    hideAllScreens();
+    appScreen.style.display = "flex";
+    greetName.textContent = "Olá, " + user.firstName;
+
+    if (isSupervisor) {
+      tabPontoBtn.style.display = "none";
+      bancoSelectorField.style.display = "block";
+      supervisorToggleCard.style.display = "block";
+    } else {
+      tabPontoBtn.style.display = "";
+      bancoSelectorField.style.display = "none";
+      supervisorToggleCard.style.display = "none";
+    }
+    selectTab("dispo");
+
+    if (!appInitialized) {
+      appInitialized = true;
+      init();
+    }
+  }
+
+  async function showLogin(message) {
+    hideAllScreens();
+    loginScreen.style.display = "flex";
+    loginError.textContent = message || "\u00A0";
+    loginBtn.disabled = false;
+    loginBtn.textContent = "Entrar";
+    await populateUserSelect();
+  }
+
+  function showCadastro() {
+    hideAllScreens();
+    cadastroScreen.style.display = "flex";
+    cadastroError.textContent = "\u00A0";
+    cadastroBtn.disabled = false;
+    cadastroBtn.textContent = "Cadastrar";
+  }
+
+  goToCadastro.addEventListener("click", function (e) { e.preventDefault(); showCadastro(); });
+  goToLogin.addEventListener("click", function (e) { e.preventDefault(); showLogin(); });
+
+  // ---------- Login ----------
+  async function populateUserSelect() {
+    var authDb = null;
+    try { authDb = await getDb(); } catch (e) { authDb = null; }
+    if (!authDb) return;
+    try {
+      var snap = await authDb.collection(USERS_COLLECTION).orderBy("firstName", "asc").limit(500).get();
+      var html = '<option value="">Selecione seu nome</option>';
+      snap.docs.forEach(function (d) {
+        var u = d.data();
+        var full = (u.firstName || "") + " " + (u.lastName || "");
+        html += '<option value="' + d.id + '">' + escapeHtml(full.trim()) + '</option>';
+      });
+      loginUserSelect.innerHTML = html;
+    } catch (err) {
+      console.error("Erro ao carregar usuários:", err);
+    }
+  }
+
+  async function handleLoginSubmit(evt) {
+    evt.preventDefault();
+    var userId = loginUserSelect.value;
+    var pass = loginPass.value;
+    if (!userId || !pass) {
+      loginError.textContent = "Selecione seu nome e digite a senha.";
+      return;
+    }
+
+    loginBtn.disabled = true;
+    loginBtn.textContent = "Verificando…";
+    loginError.textContent = "\u00A0";
+
+    var authDb = null;
+    try { authDb = await getDb(); } catch (e) { authDb = null; }
+    if (!authDb) {
+      loginBtn.disabled = false;
+      loginBtn.textContent = "Entrar";
+      loginError.textContent = "Não foi possível conectar. Recarregue a página.";
+      return;
+    }
+
+    try {
+      var passHash = await sha256Hex(pass);
+      var snap = await authDb.doc(USERS_COLLECTION + "/" + userId).get();
+      if (!snap.exists) {
+        loginBtn.disabled = false;
+        loginBtn.textContent = "Entrar";
+        loginError.textContent = "Usuário não encontrado.";
+        return;
+      }
+      var u = snap.data();
+      if (u.passwordHash === passHash) {
+        var userInfo = { id: userId, firstName: u.firstName, lastName: u.lastName, role: u.role };
+        localStorage.setItem(LOGIN_KEY, JSON.stringify(userInfo));
+        showApp(userInfo);
+      } else {
+        loginBtn.disabled = false;
+        loginBtn.textContent = "Entrar";
+        loginError.textContent = "Senha incorreta.";
+      }
+    } catch (err) {
+      console.error("Erro no login:", err);
+      loginBtn.disabled = false;
+      loginBtn.textContent = "Entrar";
+      loginError.textContent = "Erro ao verificar login. Tente novamente.";
+    }
+  }
+  loginForm.addEventListener("submit", handleLoginSubmit);
+
+  // ---------- Cadastro ----------
+  async function handleCadastroSubmit(evt) {
+    evt.preventDefault();
+    var firstName = cadFirstName.value.trim();
+    var lastName = cadLastName.value.trim();
+    var phone = cadPhone.value.trim();
+    var role = cadRole.value;
+    var pass = cadPass.value;
+    var passConfirm = cadPassConfirm.value;
+
+    if (!firstName || !lastName || !phone || !pass) {
+      cadastroError.textContent = "Preencha todos os campos.";
+      return;
+    }
+    if (pass !== passConfirm) {
+      cadastroError.textContent = "As senhas não coincidem.";
+      return;
+    }
+
+    cadastroBtn.disabled = true;
+    cadastroBtn.textContent = "Cadastrando…";
+    cadastroError.textContent = "\u00A0";
+
+    var authDb = null;
+    try { authDb = await getDb(); } catch (e) { authDb = null; }
+    if (!authDb) {
+      cadastroBtn.disabled = false;
+      cadastroBtn.textContent = "Cadastrar";
+      cadastroError.textContent = "Não foi possível conectar. Recarregue a página.";
+      return;
+    }
+
+    try {
+      var passHash = await sha256Hex(pass);
+      var ref = await authDb.collection(USERS_COLLECTION).add({
+        firstName: firstName,
+        lastName: lastName,
+        phone: phone,
+        role: role,
+        passwordHash: passHash
+      });
+      var userInfo = { id: ref.id, firstName: firstName, lastName: lastName, role: role };
+      localStorage.setItem(LOGIN_KEY, JSON.stringify(userInfo));
+      showApp(userInfo);
+    } catch (err) {
+      console.error("Erro no cadastro:", err);
+      cadastroBtn.disabled = false;
+      cadastroBtn.textContent = "Cadastrar";
+      cadastroError.textContent = "Erro ao cadastrar. Tente novamente.";
+    }
+  }
+  cadastroForm.addEventListener("submit", handleCadastroSubmit);
+
+  logoutBtn.addEventListener("click", function () {
+    localStorage.removeItem(LOGIN_KEY);
+    location.reload();
+  });
+
+  // ---------- Tabs ----------
+  function selectTab(tab) {
+    if (tab === "ponto" && isSupervisor) tab = "dispo";
+    tabDispoBtn.className = "tab-btn" + (tab === "dispo" ? " active" : "");
+    tabBancoBtn.className = "tab-btn" + (tab === "banco" ? " active" : "");
+    tabPontoBtn.className = "tab-btn" + (tab === "ponto" ? " active" : "");
+    viewDispo.className = "view" + (tab === "dispo" ? " active" : "");
+    viewBanco.className = "view" + (tab === "banco" ? " active" : "");
+    viewPonto.className = "view" + (tab === "ponto" ? " active" : "");
+    if (tab === "banco") renderCalendar();
+    if (tab === "dispo") renderDisponibilidade();
+  }
+  tabDispoBtn.addEventListener("click", function () { selectTab("dispo"); });
+  tabBancoBtn.addEventListener("click", function () { selectTab("banco"); });
+  tabPontoBtn.addEventListener("click", function () { selectTab("ponto"); });
+
+  // ---------- Registro Ponto view (colaboradores only) ----------
+  function render() {
+    var active = !!currentState.active;
+
+    if (isSupervisor) {
+      supervisorToggleBtn.disabled = !dbReady;
+      supervisorToggleBtn.className = "main-btn " + (active ? "stop" : "start");
+      supervisorToggleBtn.textContent = active ? "🔴 Marcar como indisponível" : "🟢 Marcar como disponível";
+      return;
+    }
+
+    statusRow.className = "status-row " + (active ? "active" : "inactive");
+    statusText.textContent = active ? "Disponível — trabalhando" : "Indisponível";
+    var dotEl = statusRow.querySelector(".dot");
+    dotEl.className = "dot" + (active ? " pulse" : "");
+
+    mainBtn.disabled = !dbReady;
+    projectInput.disabled = active;
+    if (active) {
+      mainBtn.textContent = "⏹  Parar";
+      mainBtn.className = "main-btn stop";
+      projectInput.value = currentState.project || "";
+      var label = "desde " + formatClock(currentState.startedAt);
+      if (currentState.project) label += " · " + currentState.project;
+      timerLabel.textContent = label;
+      startTitleBlink();
+    } else {
+      mainBtn.textContent = "▶  Iniciar";
+      mainBtn.className = "main-btn start";
+      timerLabel.textContent = "\u00A0";
+      timerEl.textContent = "00:00:00";
+      stopTitleBlink();
+    }
+    renderTotalsAndLog();
+  }
+
+  async function handleSupervisorToggle() {
+    if (!db || !currentUser) return;
+    supervisorToggleBtn.disabled = true;
+    try {
+      if (currentState.active) {
+        await db.doc(stateDocPath()).set({ active: false, startedAt: null, project: "" });
+      } else {
+        await db.doc(stateDocPath()).set({ active: true, startedAt: Date.now(), project: "" });
+      }
+    } catch (err) {
+      console.error("Erro ao atualizar disponibilidade:", err);
+    } finally {
+      supervisorToggleBtn.disabled = false;
+    }
+  }
+  supervisorToggleBtn.addEventListener("click", handleSupervisorToggle);
+
+  function tick() {
+    if (currentState.active && currentState.startedAt) {
+      timerEl.textContent = formatDuration(Date.now() - currentState.startedAt);
+    }
+  }
+
+  function renderTotalsAndLog() {
+    var now = Date.now();
+    var todayKey = localDateKey(now);
+    var weekAgo = now - 7 * 24 * 60 * 60 * 1000;
+
+    var todayMs = 0;
+    var weekMs = 0;
+
+    mySessions.forEach(function (s) {
+      if (localDateKey(s.start) === todayKey) todayMs += s.durationMs;
+      if (s.start >= weekAgo) weekMs += s.durationMs;
+    });
+
+    if (currentState.active && currentState.startedAt) {
+      var liveMs = now - currentState.startedAt;
+      if (localDateKey(currentState.startedAt) === todayKey) todayMs += liveMs;
+      if (currentState.startedAt >= weekAgo) weekMs += liveMs;
+    }
+
+    todayTotalEl.textContent = formatHoursShort(todayMs);
+    weekTotalEl.textContent = formatHoursShort(weekMs);
+
+    if (mySessions.length === 0) {
+      logListEl.innerHTML = '<div class="empty">Nenhum registro ainda</div>';
+    } else {
+      var sorted = mySessions.slice().sort(function (a, b) { return b.start - a.start; });
+      logListEl.innerHTML = sorted.slice(0, 30).map(function (s) {
+        return buildSessionItemHtml(s, { editingId: editingLogId, showDate: true });
+      }).join("");
+      wireSessionEditButtons(logListEl, mySessions, function (id) { editingLogId = id; }, renderTotalsAndLog);
+    }
+
+    updateProjectSuggestions();
+
+    // For colaboradores, their own sessions/state feed the Banco de Horas tab too
+    if (!isSupervisor) {
+      bancoSessions = mySessions;
+      renderCalendar();
+      if (selectedDayKey) renderDayDetail(selectedDayKey);
+    }
+  }
+
+  function updateProjectSuggestions() {
+    var names = {};
+    mySessions.forEach(function (s) {
+      if (s.project) names[s.project] = true;
+    });
+    var html = "";
+    Object.keys(names).forEach(function (name) {
+      html += '<option value="' + escapeHtml(name) + '"></option>';
+    });
+    projectSuggestions.innerHTML = html;
+  }
+
+  function stateDocPath() {
+    return TIME_STATE_COLLECTION + "/" + currentUser.id;
+  }
+
+  async function handleClick() {
+    if (!db || !currentUser) return;
+    mainBtn.disabled = true;
+    try {
+      if (currentState.active) {
+        var start = currentState.startedAt || Date.now();
+        var end = Date.now();
+        var durationMs = Math.max(0, end - start);
+        await db.collection(SESSIONS_COLLECTION).add({
+          start: start,
+          end: end,
+          durationMs: durationMs,
+          project: currentState.project || "",
+          userId: currentUser.id,
+          userName: currentUser.firstName + " " + currentUser.lastName
+        });
+        await db.doc(stateDocPath()).set({ active: false, startedAt: null, project: "" });
+      } else {
+        var projectName = projectInput.value.trim();
+        await db.doc(stateDocPath()).set({ active: true, startedAt: Date.now(), project: projectName });
+      }
+    } catch (err) {
+      console.error("Erro ao salvar:", err);
+    } finally {
+      mainBtn.disabled = false;
+    }
+  }
+
+  // ---------- Banco de Horas (calendar) ----------
+  function shiftMonth(delta) {
+    calMonth += delta;
+    if (calMonth < 0) { calMonth = 11; calYear -= 1; }
+    if (calMonth > 11) { calMonth = 0; calYear += 1; }
+    selectedDayKey = null;
+    dayDetailCard.style.display = "none";
+    renderCalendar();
+  }
+  calPrevBtn.addEventListener("click", function () { shiftMonth(-1); });
+  calNextBtn.addEventListener("click", function () { shiftMonth(1); });
+
+  function getBancoActiveState() {
+    if (isSupervisor) {
+      return bancoUserId ? (allStates[bancoUserId] || { active: false }) : { active: false };
+    }
+    return currentState;
+  }
+
+  function updateBancoVisibility() {
+    var noSelection = isSupervisor && !bancoUserId;
+    bancoCalendarCard.style.display = noSelection ? "none" : "block";
+    bancoEmptyMsg.style.display = noSelection ? "block" : "none";
+    if (noSelection) dayDetailCard.style.display = "none";
+  }
+
+  function computeDailyTotals() {
+    var totals = {};
+    var activeState = getBancoActiveState();
+    bancoSessions.forEach(function (s) {
+      var key = localDateKey(s.start);
+      totals[key] = (totals[key] || 0) + s.durationMs;
+    });
+    if (activeState.active && activeState.startedAt) {
+      var key2 = localDateKey(activeState.startedAt);
+      totals[key2] = (totals[key2] || 0) + (Date.now() - activeState.startedAt);
+    }
+    return totals;
+  }
+
+  function computeRangeTotal() {
+    var startVal = rangeStart.value;
+    var endVal = rangeEnd.value;
+    if (!startVal || !endVal) {
+      rangeTotalEl.textContent = "0h00";
+      return;
+    }
+    var lo = startVal <= endVal ? startVal : endVal;
+    var hi = startVal <= endVal ? endVal : startVal;
+
+    var totalMs = 0;
+    bancoSessions.forEach(function (s) {
+      var key = localDateKey(s.start);
+      if (key >= lo && key <= hi) totalMs += s.durationMs;
+    });
+
+    var activeState = getBancoActiveState();
+    if (activeState.active && activeState.startedAt) {
+      var key2 = localDateKey(activeState.startedAt);
+      if (key2 >= lo && key2 <= hi) totalMs += (Date.now() - activeState.startedAt);
+    }
+
+    rangeTotalEl.textContent = formatHoursShort(totalMs);
+  }
+  rangeStart.addEventListener("change", computeRangeTotal);
+  rangeEnd.addEventListener("change", computeRangeTotal);
+
+  (function setDefaultRange() {
+    var now = new Date();
+    var firstOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+    rangeStart.value = localDateKey(firstOfMonth.getTime());
+    rangeEnd.value = localDateKey(now.getTime());
+  })();
+
+  function renderCalendar() {
+    computeRangeTotal();
+    updateBancoVisibility();
+    if (isSupervisor && !bancoUserId) return;
+
+    var totals = computeDailyTotals();
+    calTitle.textContent = MONTH_NAMES[calMonth] + " " + calYear;
+
+    var firstOfMonth = new Date(calYear, calMonth, 1);
+    var startWeekday = firstOfMonth.getDay();
+    var daysInMonth = new Date(calYear, calMonth + 1, 0).getDate();
+    var todayKey = localDateKey(Date.now());
+
+    var html = "";
+    for (var i = 0; i < startWeekday; i++) {
+      html += '<div class="cal-day empty-cell"></div>';
+    }
+
+    var monthMs = 0;
+
+    for (var day = 1; day <= daysInMonth; day++) {
+      var key = calYear + "-" + pad(calMonth + 1) + "-" + pad(day);
+      var ms = totals[key] || 0;
+      monthMs += ms;
+      var isToday = key === todayKey;
+      var hasHours = ms > 0;
+      var cls = "cal-day" + (isToday ? " today" : "") + (hasHours ? " has-hours clickable" : "");
+      var hrsHtml = hasHours ? '<span class="hrs">' + formatHoursShort(ms) + '</span>' : "";
+      html += '<div class="' + cls + '" data-key="' + key + '">' +
+                '<span class="num">' + day + '</span>' + hrsHtml +
+              '</div>';
+    }
+
+    calGrid.innerHTML = html;
+    calMonthTotal.textContent = formatHoursShort(monthMs);
+
+    var cells = calGrid.querySelectorAll(".cal-day.clickable");
+    cells.forEach(function (cell) {
+      cell.addEventListener("click", function () {
+        selectedDayKey = cell.getAttribute("data-key");
+        renderDayDetail(selectedDayKey);
+      });
+    });
+  }
+
+  function renderDayDetail(key) {
+    var activeState = getBancoActiveState();
+    var daySessions = bancoSessions.filter(function (s) { return localDateKey(s.start) === key; });
+    if (activeState.active && activeState.startedAt && localDateKey(activeState.startedAt) === key) {
+      daySessions = daySessions.concat([{
+        start: activeState.startedAt,
+        end: Date.now(),
+        durationMs: Date.now() - activeState.startedAt,
+        project: activeState.project || "",
+        live: true
+      }]);
+    }
+    if (daySessions.length === 0) {
+      dayDetailCard.style.display = "none";
+      return;
+    }
+    var parts = key.split("-");
+    var d = new Date(parseInt(parts[0], 10), parseInt(parts[1], 10) - 1, parseInt(parts[2], 10));
+    dayDetailTitle.textContent = WEEKDAY_NAMES_LONG[d.getDay()] + " · " + pad(d.getDate()) + "/" + pad(d.getMonth() + 1) + "/" + d.getFullYear();
+
+    var sorted = daySessions.slice().sort(function (a, b) { return a.start - b.start; });
+    dayDetailList.innerHTML = sorted.map(function (s) {
+      return buildSessionItemHtml(s, { editingId: editingDayId, showDate: false });
+    }).join("");
+    wireSessionEditButtons(dayDetailList, bancoSessions, function (id) { editingDayId = id; }, function () { renderDayDetail(key); });
+    dayDetailCard.style.display = "block";
+  }
+
+  function loadBancoForUser(userId) {
+    bancoUserId = userId || null;
+    selectedDayKey = null;
+    dayDetailCard.style.display = "none";
+
+    if (bancoUnsubscribe) {
+      bancoUnsubscribe();
+      bancoUnsubscribe = null;
+    }
+
+    if (!bancoUserId) {
+      bancoSessions = [];
+      renderCalendar();
+      return;
+    }
+
+    bancoUnsubscribe = db.collection(SESSIONS_COLLECTION)
+      .where("userId", "==", bancoUserId)
+      .orderBy("start", "desc")
+      .limit(1000)
+      .onSnapshot(
+        function (snap) {
+          bancoSessions = snap.docs.map(function (d) {
+            var data = d.data();
+            var s = {};
+            for (var key in data) { s[key] = data[key]; }
+            s.id = d.id;
+            return s;
+          });
+          renderCalendar();
+          if (selectedDayKey) renderDayDetail(selectedDayKey);
+        },
+        function (err) {
+          console.error("Erro ao ler banco de horas:", err);
+        }
+      );
+  }
+
+  function populateBancoUserSelect() {
+    var colaboradores = allUsers.filter(function (u) { return u.role !== "Supervisor"; });
+    var html = '<option value="">Selecione um colaborador</option>';
+    colaboradores.forEach(function (u) {
+      var full = ((u.firstName || "") + " " + (u.lastName || "")).trim();
+      var selected = u.id === bancoUserId ? " selected" : "";
+      html += '<option value="' + u.id + '"' + selected + '>' + escapeHtml(full) + '</option>';
+    });
+    bancoUserSelect.innerHTML = html;
+  }
+
+  bancoUserSelect.addEventListener("change", function () {
+    loadBancoForUser(bancoUserSelect.value);
+  });
+
+  // ---------- Salas de reunião ----------
+  function renderRooms() {
+    var myRoom = currentUser ? (allRoomStates[currentUser.id] || {}).room : null;
+    var html = "";
+    ROOMS.forEach(function (room, idx) {
+      var occupants = allUsers.filter(function (u) {
+        var st = allRoomStates[u.id];
+        return st && st.room === room.id;
+      });
+      var isMine = myRoom === room.id;
+
+      var occupantsHtml;
+      if (occupants.length === 0) {
+        occupantsHtml = '<div class="empty" style="padding:12px 0;">Ninguém nesta sala no momento</div>';
+      } else {
+        occupantsHtml = occupants.map(function (u) {
+          var youTag = currentUser && u.id === currentUser.id ? '<span class="you-tag">(você)</span>' : "";
+          var st = allRoomStates[u.id] || {};
+          var sinceLabel = st.since ? " · desde " + formatClock(st.since) : "";
+          return '<div class="user-item">' +
+                   '<span class="dot pulse" style="color: var(--accent-green);"></span>' +
+                   '<div class="info">' +
+                     '<div class="name-row">' + escapeHtml((u.firstName || "") + " " + (u.lastName || "")) + " " + youTag + '</div>' +
+                     '<div class="detail">Na sala' + sinceLabel + '</div>' +
+                   '</div>' +
+                 '</div>';
+        }).join("");
+      }
+
+      html +=
+        '<div style="' + (idx > 0 ? "margin-top:22px;" : "") + '">' +
+          '<a href="' + room.url + '" target="_blank" rel="noopener noreferrer" class="main-btn start" style="text-decoration:none; text-align:center; display:block; margin-bottom:4px;">🎥 Abrir ' + room.label + '</a>' +
+          '<div class="footnote" style="margin:0 0 8px;">' + room.url.replace("https://", "") + '</div>' +
+          '<button type="button" class="main-btn ' + (isMine ? "stop" : "start") + '" data-room="' + room.id + '" style="margin-bottom:10px;">' +
+            (isMine ? "Sair da " + room.label : "Estou na " + room.label) +
+          '</button>' +
+          '<div class="user-list">' + occupantsHtml + '</div>' +
+        '</div>';
+    });
+    roomsContainer.innerHTML = html;
+
+    var buttons = roomsContainer.querySelectorAll("button[data-room]");
+    buttons.forEach(function (btn) {
+      btn.addEventListener("click", function () {
+        toggleRoom(btn.getAttribute("data-room"));
+      });
+    });
+  }
+
+  async function toggleRoom(roomId) {
+    if (!db || !currentUser) return;
+    var myRoom = (allRoomStates[currentUser.id] || {}).room;
+    try {
+      if (myRoom === roomId) {
+        await db.doc(MEET_ROOM_COLLECTION + "/" + currentUser.id).set({ room: null, since: null });
+      } else {
+        await db.doc(MEET_ROOM_COLLECTION + "/" + currentUser.id).set({ room: roomId, since: Date.now() });
+      }
+    } catch (err) {
+      console.error("Erro ao atualizar sala:", err);
+    }
+  }
+
+  // ---------- Disponibilidade ----------
+  function renderDisponibilidade() {
+    if (allUsers.length === 0) {
+      userListEl.innerHTML = '<div class="empty">Nenhum usuário cadastrado ainda</div>';
+      return;
+    }
+
+    var rows = allUsers.map(function (u) {
+      var state = allStates[u.id] || { active: false };
+      return { user: u, state: state };
+    });
+
+    rows.sort(function (a, b) {
+      if (!!a.state.active !== !!b.state.active) return a.state.active ? -1 : 1;
+      var an = (a.user.firstName || "").toLowerCase();
+      var bn = (b.user.firstName || "").toLowerCase();
+      return an < bn ? -1 : an > bn ? 1 : 0;
+    });
+
+    userListEl.innerHTML = "";
+    rows.forEach(function (row) {
+      var u = row.user;
+      var st = row.state;
+      var active = !!st.active;
+      var item = document.createElement("div");
+      item.className = "user-item" + (active ? " active" : "");
+
+      var youTag = currentUser && u.id === currentUser.id ? '<span class="you-tag">(você)</span>' : "";
+      var roleBadge = u.role ? '<span class="role-badge">' + escapeHtml(u.role) + '</span>' : "";
+
+      var detail;
+      if (active) {
+        detail = "Disponível";
+        if (st.startedAt) detail += " · desde " + formatClock(st.startedAt);
+        if (st.project) detail += " · " + escapeHtml(st.project);
+      } else {
+        detail = "Indisponível";
+      }
+
+      item.innerHTML =
+        '<span class="dot' + (active ? " pulse" : "") + '"></span>' +
+        '<div class="info">' +
+          '<div class="name-row">' + escapeHtml((u.firstName || "") + " " + (u.lastName || "")) + ' ' + roleBadge + ' ' + youTag + '</div>' +
+          '<div class="detail">' + detail + '</div>' +
+        '</div>';
+      item.querySelector(".dot").style.color = active ? "var(--accent-green)" : "var(--accent-red)";
+      userListEl.appendChild(item);
+    });
+  }
+
+  // ---------- App init (after login) ----------
+  async function init() {
+    try {
+      db = await getDb();
+    } catch (e) {
+      db = null;
+    }
+
+    if (!db) {
+      statusText.textContent = "Indisponível neste momento";
+      mainBtn.textContent = "Recarregue a página";
+      return;
+    }
+
+    db.doc(stateDocPath()).onSnapshot(
+      function (snap) {
+        var data = snap.exists ? snap.data() : null;
+        currentState = data || { active: false, startedAt: null, project: "" };
+        dbReady = true;
+        render();
+      },
+      function (err) {
+        console.error("Erro ao ler estado:", err);
+      }
+    );
+
+    if (!isSupervisor) {
+      db.collection(SESSIONS_COLLECTION)
+        .where("userId", "==", currentUser.id)
+        .orderBy("start", "desc")
+        .limit(1000)
+        .onSnapshot(
+          function (snap) {
+            mySessions = snap.docs.map(function (d) {
+              var data = d.data();
+              var s = {};
+              for (var key in data) { s[key] = data[key]; }
+              s.id = d.id;
+              return s;
+            });
+            renderTotalsAndLog();
+          },
+          function (err) {
+            console.error("Erro ao ler registros:", err);
+          }
+        );
+
+      mainBtn.addEventListener("click", handleClick);
+    }
+
+    db.collection(USERS_COLLECTION)
+      .orderBy("firstName", "asc")
+      .limit(500)
+      .onSnapshot(
+        function (snap) {
+          allUsers = snap.docs.map(function (d) {
+            var data = d.data();
+            var u = {};
+            for (var key in data) { u[key] = data[key]; }
+            u.id = d.id;
+            return u;
+          });
+          renderDisponibilidade();
+          renderRooms();
+          if (isSupervisor) populateBancoUserSelect();
+        },
+        function (err) {
+          console.error("Erro ao ler usuários:", err);
+        }
+      );
+
+    db.collection(TIME_STATE_COLLECTION)
+      .limit(500)
+      .onSnapshot(
+        function (snap) {
+          var map = {};
+          snap.docs.forEach(function (d) {
+            map[d.id] = d.data();
+          });
+          allStates = map;
+          renderDisponibilidade();
+          if (isSupervisor) renderCalendar();
+        },
+        function (err) {
+          console.error("Erro ao ler disponibilidade:", err);
+        }
+      );
+
+    db.collection(MEET_ROOM_COLLECTION)
+      .limit(500)
+      .onSnapshot(
+        function (snap) {
+          var map = {};
+          snap.docs.forEach(function (d) {
+            map[d.id] = d.data();
+          });
+          allRoomStates = map;
+          renderRooms();
+        },
+        function (err) {
+          console.error("Erro ao ler salas de reunião:", err);
+        }
+      );
+
+    updateBancoVisibility();
+
+    tickInterval = setInterval(function () {
+      if (!isSupervisor) tick();
+      renderDisponibilidade();
+      var active = getBancoActiveState().active;
+      if (active) renderCalendar();
+    }, 1000);
+  }
+
+  function showFallbackError(msg) {
+    if (cadastroScreen.style.display !== "none") {
+      cadastroError.textContent = msg;
+    } else if (loginScreen.style.display !== "none") {
+      loginError.textContent = msg;
+    } else {
+      console.error(msg);
+    }
+  }
+
+  window.addEventListener("error", function (e) {
+    showFallbackError("Ocorreu um erro inesperado. Recarregue a página e tente novamente.");
+  });
+  window.addEventListener("unhandledrejection", function (e) {
+    showFallbackError("Ocorreu um erro inesperado. Recarregue a página e tente novamente.");
+  });
+
+  // ---------- Aviso ao fechar a aba com o ponto aberto ----------
+  window.addEventListener("beforeunload", function (e) {
+    if (!isSupervisor && currentState && currentState.active) {
+      e.preventDefault();
+      e.returnValue = "";
+      return "";
+    }
+  });
+
+  // ---------- Título da aba piscando enquanto o ponto está aberto ----------
+  var ORIGINAL_TITLE = document.title;
+  var titleBlinkInterval = null;
+  var titleBlinkOn = false;
+
+  function startTitleBlink() {
+    if (titleBlinkInterval) return;
+    titleBlinkInterval = setInterval(function () {
+      titleBlinkOn = !titleBlinkOn;
+      document.title = titleBlinkOn ? "⏰ Ponto aberto!" : ORIGINAL_TITLE;
+    }, 1500);
+  }
+
+  function stopTitleBlink() {
+    if (titleBlinkInterval) {
+      clearInterval(titleBlinkInterval);
+      titleBlinkInterval = null;
+    }
+    document.title = ORIGINAL_TITLE;
+  }
+
+  // ---------- Boot ----------
+  (function boot() {
+    var saved = null;
+    try { saved = JSON.parse(localStorage.getItem(LOGIN_KEY) || "null"); } catch (e) { saved = null; }
+    if (saved && saved.id && saved.firstName) {
+      showApp(saved);
+    } else {
+      showLogin();
+    }
+  })();
+})();
+</script>
+</body>
+</html>
