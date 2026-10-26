@@ -349,6 +349,77 @@
     color: var(--accent-red);
     font-size: 0.78rem;
   }
+  .edit-field-label {
+    display: block;
+    font-size: 0.7rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    margin-bottom: 5px;
+  }
+  .edit-project,
+  .delete-pass {
+    width: 100%;
+    padding: 8px 10px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    background: var(--bg);
+    color: var(--text);
+    font-size: 0.9rem;
+    font-family: inherit;
+  }
+  .edit-project:focus,
+  .delete-pass:focus {
+    outline: 2px solid var(--btn-start);
+    outline-offset: -1px;
+  }
+  .edit-delete-btn {
+    width: 100%;
+    padding: 9px;
+    border-radius: 8px;
+    border: 1px solid var(--accent-red);
+    background: transparent;
+    color: var(--accent-red);
+    font-weight: 700;
+    font-size: 0.85rem;
+    cursor: pointer;
+  }
+  .delete-confirm {
+    display: none;
+    flex-direction: column;
+    gap: 8px;
+    padding: 12px;
+    border-radius: 10px;
+    border: 1px solid var(--accent-red);
+    background: var(--accent-red-bg);
+  }
+  .delete-warn {
+    font-size: 0.8rem;
+    font-weight: 600;
+  }
+  .delete-confirm-btn, .delete-back-btn {
+    flex: 1;
+    padding: 9px;
+    border-radius: 8px;
+    border: none;
+    font-weight: 700;
+    font-size: 0.85rem;
+    cursor: pointer;
+  }
+  .delete-confirm-btn {
+    background: var(--btn-stop);
+    color: white;
+  }
+  .delete-back-btn {
+    background: var(--bg);
+    color: var(--text);
+    border: 1px solid var(--border);
+  }
+  .delete-confirm-btn:disabled, .edit-save-btn:disabled {
+    opacity: 0.6;
+    cursor: default;
+  }
   .empty {
     text-align: center;
     color: var(--text-muted);
@@ -471,6 +542,70 @@
     color: var(--text);
     font-size: 0.95rem;
     font-family: inherit;
+  }
+  /* Filtro por projeto (Banco de Horas) */
+  .proj-filter {
+    margin-bottom: 16px;
+  }
+  .proj-filter label {
+    display: block;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    margin-bottom: 6px;
+  }
+  .proj-filter select {
+    width: 100%;
+    padding: 12px 14px;
+    border-radius: 10px;
+    border: 1px solid var(--border);
+    background: var(--bg);
+    color: var(--text);
+    font-size: 0.95rem;
+    font-family: inherit;
+  }
+  .proj-filter select:focus {
+    outline: 2px solid var(--btn-start);
+    outline-offset: -1px;
+  }
+  .proj-breakdown {
+    margin-top: 18px;
+    padding-top: 16px;
+    border-top: 1px solid var(--border);
+  }
+  .proj-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    margin-top: 8px;
+    padding: 10px 12px;
+    border-radius: 10px;
+    border: 1px solid var(--border);
+    background: var(--bg);
+    color: var(--text);
+    font-size: 0.88rem;
+    font-family: inherit;
+    text-align: left;
+    cursor: pointer;
+  }
+  .proj-row.selected {
+    border-color: var(--btn-start);
+    background: var(--accent-green-bg);
+  }
+  .proj-row .proj-name {
+    font-weight: 600;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .proj-row .proj-dur {
+    font-weight: 700;
+    white-space: nowrap;
   }
   /* Disponibilidade */
   .user-list {
@@ -721,6 +856,12 @@
       </div>
       <div id="bancoEmptyMsg" class="empty" style="display:none;">Selecione um colaborador para ver o banco de horas</div>
       <div id="bancoCalendarCard" class="card">
+        <div class="proj-filter">
+          <label for="projFilterSelect">Filtrar por projeto</label>
+          <select id="projFilterSelect">
+            <option value="">Todos os projetos</option>
+          </select>
+        </div>
         <div class="cal-header">
           <button id="calPrevBtn" class="cal-nav-btn">‹</button>
           <div id="calTitle" class="cal-title">—</div>
@@ -731,6 +872,11 @@
         </div>
         <div id="calGrid" class="cal-grid"></div>
         <div class="cal-month-total">Total do mês: <b id="calMonthTotal">0h00</b></div>
+        <div class="proj-breakdown">
+          <div class="section-title" style="margin-top:0;">Horas por projeto no mês</div>
+          <div id="projBreakdown"></div>
+          <div class="footnote">Toque em um projeto para filtrar o calendário</div>
+        </div>
       </div>
       <div id="dayDetailCard" class="card" style="display:none;">
         <div id="dayDetailTitle" class="day-detail-title"></div>
@@ -750,6 +896,7 @@
           </div>
         </div>
         <div class="cal-month-total">Total no período: <b id="rangeTotal">0h00</b></div>
+        <div id="rangeFilterNote" class="footnote" style="display:none;"></div>
       </div>
     </div>
 
@@ -935,6 +1082,9 @@ async function getDb() {
   var rangeStart = document.getElementById("rangeStart");
   var rangeEnd = document.getElementById("rangeEnd");
   var rangeTotalEl = document.getElementById("rangeTotal");
+  var rangeFilterNote = document.getElementById("rangeFilterNote");
+  var projFilterSelect = document.getElementById("projFilterSelect");
+  var projBreakdown = document.getElementById("projBreakdown");
 
   // Login / Cadastro / App screen elements
   var loginScreen = document.getElementById("loginScreen");
@@ -999,8 +1149,33 @@ async function getDb() {
     var projectLine = s.project ? '<div class="project">' + escapeHtml(s.project) + '</div>' : "";
 
     if (isEditing) {
+      // Só quem criou o registro pode excluí-lo (e mesmo assim com a senha).
+      var canDelete = !!(currentUser && s.userId && s.userId === currentUser.id);
+      var listId = "editProjList_" + s.id;
+      var suggestions = distinctProjectNames(mySessions.concat(bancoSessions)).map(function (name) {
+        return '<option value="' + escapeAttr(name) + '"></option>';
+      }).join("");
+
+      var deleteHtml = canDelete
+        ? '<button type="button" class="edit-delete-btn">🗑️ Excluir registro</button>' +
+          '<div class="delete-confirm">' +
+            '<div class="delete-warn">Digite sua senha para excluir este registro. Essa ação não pode ser desfeita.</div>' +
+            '<input type="password" class="delete-pass" autocomplete="current-password" placeholder="Sua senha">' +
+            '<div class="edit-error" data-role="delete-error">&nbsp;</div>' +
+            '<div class="edit-actions">' +
+              '<button type="button" class="delete-confirm-btn" data-session-id="' + s.id + '">Confirmar exclusão</button>' +
+              '<button type="button" class="delete-back-btn">Voltar</button>' +
+            '</div>' +
+          '</div>'
+        : "";
+
       return '<div class="log-item log-item-editing" data-session-id="' + s.id + '">' +
-        projectLine +
+        '<div>' +
+          '<label class="edit-field-label">Projeto</label>' +
+          '<input type="text" class="edit-project" list="' + listId + '" autocomplete="off" ' +
+            'placeholder="Sem projeto" value="' + escapeAttr(s.project || "") + '">' +
+          '<datalist id="' + listId + '">' + suggestions + '</datalist>' +
+        '</div>' +
         '<div class="edit-row">' +
           '<input type="time" class="edit-time-start" value="' + formatClock(s.start) + '">' +
           '<span>–</span>' +
@@ -1011,6 +1186,7 @@ async function getDb() {
           '<button type="button" class="edit-save-btn" data-session-id="' + s.id + '">Salvar</button>' +
           '<button type="button" class="edit-cancel-btn">Cancelar</button>' +
         '</div>' +
+        deleteHtml +
       '</div>';
     }
 
@@ -1051,6 +1227,7 @@ async function getDb() {
         var item = btn.closest(".log-item-editing");
         var startVal = item.querySelector(".edit-time-start").value;
         var endVal = item.querySelector(".edit-time-end").value;
+        var newProject = item.querySelector(".edit-project").value.trim();
         var errorEl = item.querySelector('[data-role="edit-error"]');
         if (!startVal || !endVal) {
           errorEl.textContent = "Preencha os dois horários.";
@@ -1058,22 +1235,35 @@ async function getDb() {
         }
         var original = sessionsArray.find(function (s) { return s.id === sessionId; });
         if (!original) return;
-        var newStart = combineDateAndTime(original.start, startVal);
-        var newEnd = combineDateAndTime(original.start, endVal);
-        if (newEnd <= newStart) {
-          errorEl.textContent = "O horário final precisa ser depois do inicial.";
+
+        // Só grava o que mudou: se os horários não mudaram, mantém início, fim e
+        // duração exatos (com os segundos) e altera apenas o projeto.
+        var timesChanged = startVal !== formatClock(original.start) || endVal !== formatClock(original.end);
+        var projectChanged = newProject !== (original.project || "").trim();
+        if (!timesChanged && !projectChanged) {
+          editingIdSetter(null);
+          rerenderFn();
           return;
         }
+
+        var changes = { edited: true, editedAt: Date.now() };
+        if (timesChanged) {
+          var newStart = combineDateAndTime(original.start, startVal);
+          var newEnd = combineDateAndTime(original.start, endVal);
+          if (newEnd <= newStart) {
+            errorEl.textContent = "O horário final precisa ser depois do inicial.";
+            return;
+          }
+          changes.start = newStart;
+          changes.end = newEnd;
+          changes.durationMs = newEnd - newStart;
+        }
+        if (projectChanged) changes.project = newProject;
+
         btn.disabled = true;
         btn.textContent = "Salvando…";
         try {
-          await db.collection(SESSIONS_COLLECTION).doc(sessionId).update({
-            start: newStart,
-            end: newEnd,
-            durationMs: newEnd - newStart,
-            edited: true,
-            editedAt: Date.now()
-          });
+          await db.collection(SESSIONS_COLLECTION).doc(sessionId).update(changes);
           editingIdSetter(null);
           rerenderFn();
         } catch (err) {
@@ -1083,6 +1273,86 @@ async function getDb() {
           btn.textContent = "Salvar";
         }
       });
+    });
+
+    // ----- Exclusão (somente o dono do registro, com confirmação por senha) -----
+    containerEl.querySelectorAll(".edit-delete-btn").forEach(function (btn) {
+      btn.addEventListener("click", function () {
+        var item = btn.closest(".log-item-editing");
+        btn.style.display = "none";
+        item.querySelector(".delete-confirm").style.display = "flex";
+        item.querySelector(".delete-pass").focus();
+      });
+    });
+
+    containerEl.querySelectorAll(".delete-back-btn").forEach(function (btn) {
+      btn.addEventListener("click", function () {
+        var item = btn.closest(".log-item-editing");
+        item.querySelector(".delete-confirm").style.display = "none";
+        item.querySelector(".delete-pass").value = "";
+        item.querySelector('[data-role="delete-error"]').innerHTML = "&nbsp;";
+        item.querySelector(".edit-delete-btn").style.display = "";
+      });
+    });
+
+    containerEl.querySelectorAll(".delete-confirm-btn").forEach(function (btn) {
+      btn.addEventListener("click", async function () {
+        var sessionId = btn.getAttribute("data-session-id");
+        var item = btn.closest(".log-item-editing");
+        var pass = item.querySelector(".delete-pass").value;
+        var errorEl = item.querySelector('[data-role="delete-error"]');
+
+        var original = sessionsArray.find(function (s) { return s.id === sessionId; });
+        if (!original || !currentUser || original.userId !== currentUser.id) {
+          errorEl.textContent = "Só quem criou o registro pode excluí-lo.";
+          return;
+        }
+        if (!pass) {
+          errorEl.textContent = "Digite sua senha para confirmar.";
+          return;
+        }
+
+        btn.disabled = true;
+        btn.textContent = "Verificando…";
+        errorEl.innerHTML = "&nbsp;";
+        try {
+          var userSnap = await db.doc(USERS_COLLECTION + "/" + currentUser.id).get();
+          var passHash = await sha256Hex(pass);
+          if (!userSnap.exists || userSnap.data().passwordHash !== passHash) {
+            errorEl.textContent = "Senha incorreta.";
+            btn.disabled = false;
+            btn.textContent = "Confirmar exclusão";
+            return;
+          }
+          await db.doc(SESSIONS_COLLECTION + "/" + sessionId).delete();
+          editingIdSetter(null);
+          rerenderFn();
+        } catch (err) {
+          console.error("Erro ao excluir registro:", err);
+          errorEl.textContent = "Erro ao excluir. Tente novamente.";
+          btn.disabled = false;
+          btn.textContent = "Confirmar exclusão";
+        }
+      });
+    });
+  }
+
+  function escapeAttr(str) {
+    return String(str).replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+  }
+
+  // Nomes de projeto distintos (sem diferenciar maiúsculas/minúsculas), usando a
+  // grafia do registro mais recente, para as sugestões do campo "Projeto".
+  function distinctProjectNames(arr) {
+    var best = {};
+    arr.forEach(function (s) {
+      var name = (s.project || "").trim();
+      if (!name) return;
+      var id = projectId(name);
+      if (!(id in best) || s.start > best[id].start) best[id] = { name: name, start: s.start };
+    });
+    return Object.keys(best).map(function (id) { return best[id].name; }).sort(function (a, b) {
+      return a.localeCompare(b, "pt-BR");
     });
   }
 
@@ -1503,21 +1773,159 @@ async function getDb() {
     if (noSelection) dayDetailCard.style.display = "none";
   }
 
+  // ---------- Filtro por projeto ----------
+  // O filtro vale para o calendário, o detalhe do dia e a soma por período.
+  // Projetos são agrupados sem diferenciar maiúsculas/minúsculas e espaços
+  // nas pontas ("Escola X" e "escola x " contam como o mesmo projeto).
+  var bancoProjectFilter = "";   // "" = todos os projetos
+  var bancoProjectLabels = {};   // id -> nome exibido
+  var projOptionsSig = null;
+  var lastBreakdownHtml = null;
+  var breakdownIds = [];
+
+  function projectId(name) {
+    var k = (name || "").trim().toLowerCase();
+    return k || "__none__";
+  }
+
+  function projectLabel(name) {
+    var t = (name || "").trim();
+    return t || "(Sem projeto)";
+  }
+
+  function matchesProjectFilter(name) {
+    return !bancoProjectFilter || projectId(name) === bancoProjectFilter;
+  }
+
+  function getBancoLiveSession() {
+    var st = getBancoActiveState();
+    if (st.active && st.startedAt) {
+      return { start: st.startedAt, durationMs: Date.now() - st.startedAt, project: st.project || "" };
+    }
+    return null;
+  }
+
+  function updateProjectFilterOptions() {
+    // O nome exibido de cada projeto é a grafia do registro mais recente.
+    var labels = {};
+    var latest = {};
+    bancoSessions.forEach(function (s) {
+      var id = projectId(s.project);
+      if (!(id in labels) || s.start > latest[id]) {
+        labels[id] = projectLabel(s.project);
+        latest[id] = s.start;
+      }
+    });
+    var live = getBancoLiveSession();
+    if (live) {
+      var liveId = projectId(live.project);
+      if (!(liveId in labels) || live.start >= latest[liveId]) {
+        labels[liveId] = projectLabel(live.project);
+        latest[liveId] = live.start;
+      }
+    }
+    bancoProjectLabels = labels;
+    if (bancoProjectFilter && !(bancoProjectFilter in labels)) bancoProjectFilter = "";
+
+    var ids = Object.keys(labels).sort(function (a, b) {
+      if (a === "__none__") return 1;
+      if (b === "__none__") return -1;
+      return labels[a].localeCompare(labels[b], "pt-BR");
+    });
+
+    // Só reconstrói as opções quando a lista muda (evita fechar o menu aberto
+    // pelo usuário, já que o calendário é redesenhado a cada segundo).
+    var sig = ids.map(function (id) { return id + "=" + labels[id]; }).join("|");
+    if (sig !== projOptionsSig) {
+      projOptionsSig = sig;
+      projFilterSelect.innerHTML = "";
+      var optAll = document.createElement("option");
+      optAll.value = "";
+      optAll.textContent = "Todos os projetos";
+      projFilterSelect.appendChild(optAll);
+      ids.forEach(function (id) {
+        var opt = document.createElement("option");
+        opt.value = id;
+        opt.textContent = labels[id];
+        projFilterSelect.appendChild(opt);
+      });
+    }
+    if (projFilterSelect.value !== bancoProjectFilter) projFilterSelect.value = bancoProjectFilter;
+  }
+
+  function setProjectFilter(id) {
+    bancoProjectFilter = id || "";
+    renderCalendar();
+    if (selectedDayKey) renderDayDetail(selectedDayKey);
+  }
+  projFilterSelect.addEventListener("change", function () {
+    setProjectFilter(projFilterSelect.value);
+  });
+
+  function renderProjectBreakdown() {
+    var prefix = calYear + "-" + pad(calMonth + 1) + "-";
+    var totals = {};
+    function add(name, ms, startTs) {
+      if (localDateKey(startTs).indexOf(prefix) !== 0) return;
+      var id = projectId(name);
+      totals[id] = (totals[id] || 0) + ms;
+    }
+    bancoSessions.forEach(function (s) { add(s.project, s.durationMs, s.start); });
+    var live = getBancoLiveSession();
+    if (live) add(live.project, live.durationMs, live.start);
+
+    var ids = Object.keys(totals).sort(function (a, b) { return totals[b] - totals[a]; });
+    breakdownIds = ids;
+
+    var html;
+    if (ids.length === 0) {
+      html = '<div class="empty" style="padding:12px 0;">Nenhum registro neste mês</div>';
+    } else {
+      html = ids.map(function (id, i) {
+        var sel = id === bancoProjectFilter ? " selected" : "";
+        return '<button type="button" class="proj-row' + sel + '" data-idx="' + i + '">' +
+                 '<span class="proj-name">' + escapeHtml(bancoProjectLabels[id] || id) + '</span>' +
+                 '<span class="proj-dur">' + formatHoursShort(totals[id]) + '</span>' +
+               '</button>';
+      }).join("");
+    }
+
+    // Evita reescrever o HTML (e perder cliques) quando nada mudou.
+    if (html === lastBreakdownHtml) return;
+    lastBreakdownHtml = html;
+    projBreakdown.innerHTML = html;
+    projBreakdown.querySelectorAll(".proj-row").forEach(function (btn) {
+      btn.addEventListener("click", function () {
+        var id = breakdownIds[parseInt(btn.getAttribute("data-idx"), 10)];
+        // Tocar de novo no projeto já selecionado volta para "todos".
+        setProjectFilter(bancoProjectFilter === id ? "" : id);
+      });
+    });
+  }
+
   function computeDailyTotals() {
     var totals = {};
-    var activeState = getBancoActiveState();
     bancoSessions.forEach(function (s) {
+      if (!matchesProjectFilter(s.project)) return;
       var key = localDateKey(s.start);
       totals[key] = (totals[key] || 0) + s.durationMs;
     });
-    if (activeState.active && activeState.startedAt) {
-      var key2 = localDateKey(activeState.startedAt);
-      totals[key2] = (totals[key2] || 0) + (Date.now() - activeState.startedAt);
+    var live = getBancoLiveSession();
+    if (live && matchesProjectFilter(live.project)) {
+      var key2 = localDateKey(live.start);
+      totals[key2] = (totals[key2] || 0) + live.durationMs;
     }
     return totals;
   }
 
   function computeRangeTotal() {
+    if (bancoProjectFilter) {
+      rangeFilterNote.textContent = "Somente o projeto: " + (bancoProjectLabels[bancoProjectFilter] || "");
+      rangeFilterNote.style.display = "block";
+    } else {
+      rangeFilterNote.style.display = "none";
+    }
+
     var startVal = rangeStart.value;
     var endVal = rangeEnd.value;
     if (!startVal || !endVal) {
@@ -1529,14 +1937,15 @@ async function getDb() {
 
     var totalMs = 0;
     bancoSessions.forEach(function (s) {
+      if (!matchesProjectFilter(s.project)) return;
       var key = localDateKey(s.start);
       if (key >= lo && key <= hi) totalMs += s.durationMs;
     });
 
-    var activeState = getBancoActiveState();
-    if (activeState.active && activeState.startedAt) {
-      var key2 = localDateKey(activeState.startedAt);
-      if (key2 >= lo && key2 <= hi) totalMs += (Date.now() - activeState.startedAt);
+    var live = getBancoLiveSession();
+    if (live && matchesProjectFilter(live.project)) {
+      var key2 = localDateKey(live.start);
+      if (key2 >= lo && key2 <= hi) totalMs += live.durationMs;
     }
 
     rangeTotalEl.textContent = formatHoursShort(totalMs);
@@ -1552,6 +1961,7 @@ async function getDb() {
   })();
 
   function renderCalendar() {
+    updateProjectFilterOptions();
     computeRangeTotal();
     updateBancoVisibility();
     if (isSupervisor && !bancoUserId) return;
@@ -1586,6 +1996,7 @@ async function getDb() {
 
     calGrid.innerHTML = html;
     calMonthTotal.textContent = formatHoursShort(monthMs);
+    renderProjectBreakdown();
 
     var cells = calGrid.querySelectorAll(".cal-day.clickable");
     cells.forEach(function (cell) {
@@ -1598,8 +2009,11 @@ async function getDb() {
 
   function renderDayDetail(key) {
     var activeState = getBancoActiveState();
-    var daySessions = bancoSessions.filter(function (s) { return localDateKey(s.start) === key; });
-    if (activeState.active && activeState.startedAt && localDateKey(activeState.startedAt) === key) {
+    var daySessions = bancoSessions.filter(function (s) {
+      return localDateKey(s.start) === key && matchesProjectFilter(s.project);
+    });
+    if (activeState.active && activeState.startedAt && localDateKey(activeState.startedAt) === key &&
+        matchesProjectFilter(activeState.project)) {
       daySessions = daySessions.concat([{
         start: activeState.startedAt,
         end: Date.now(),
@@ -1626,6 +2040,7 @@ async function getDb() {
 
   function loadBancoForUser(userId) {
     bancoUserId = userId || null;
+    bancoProjectFilter = "";
     selectedDayKey = null;
     dayDetailCard.style.display = "none";
 
